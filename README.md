@@ -7,3 +7,5 @@ The war-packaged version can be downloaded here: http://www.hft-stuttgart.de/Stu
 You can find the moodle plugin for assited manual grading of essay questions here:
 https://github.com/HftAssistedGrading/moodle-plugin-assisted-grading
 
+
+
