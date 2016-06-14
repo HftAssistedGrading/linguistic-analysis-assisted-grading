@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.dkpro.core.stopwordremover.StopWordRemover;
 public class Preprocessor {
 
 	private String question;
-	private String referenceAnswer;
+	//private String[] referenceAns;
 
 	private AnalysisEngine segmenter;
 	private AnalysisEngine postagger;
@@ -74,13 +74,13 @@ public class Preprocessor {
 	 * Preprocesses the question and reference answers
 	 * @param records
 	 */
-	public void preprocessTextWithDKProPipeline(ArrayList<Record> records){
+	public void preprocessTextWithDKProPipeline(Record records){
 		String oldQuestion = null;
 		JCas questionInJCas = null;
 		JCas ra = null;
 		JCas jcas = null;
 
-		stopwordsSource = this.getClass().getResourceAsStream("stopwords_basic_" + records.get(1).getRecord().get("languageFlag") + ".txt");
+		stopwordsSource = this.getClass().getResourceAsStream("stopwords_basic_" + records.getRecord().get("languageFlag") + ".txt");
 
 		File temp = null;
 		try {
@@ -111,17 +111,16 @@ public class Preprocessor {
 			AnalysisEngine stopwordRemover = null;
 
 
-			for(Record r : records){
-				question = r.getRecord().get("question");
+				question = records.getRecord().get("question");
 
 				//To not do the same stuff over and over again without any differences in the result
 				if(!question.equals(oldQuestion) || oldQuestion == null){
 					stopwordRemover = null;
 
-					referenceAnswer = r.getRecord().get("refAnswer");
+					//referenceAns = records.getRecord().get("refAnswer").split("\\n");
 					jcas.reset();
 					//create a new JCas and add the question
-					questionInJCas = createJCasAndRunDKProPipeline(jcas, question, records.get(1).getRecord().get("languageFlag"), null);
+					questionInJCas = createJCasAndRunDKProPipeline(jcas, question, records.getRecord().get("languageFlag"), null);
 
 					//gather preprocessing information
 					//prepare stopword removal (remove normal stopwords (snowball) and all words, already mentioned in the question
@@ -152,56 +151,63 @@ public class Preprocessor {
 					}
 
 					jcas.reset();
+					
+					
 					//gather preprocessing info for all reference answers
-					ra = createJCasAndRunDKProPipeline(jcas, referenceAnswer.replaceAll("[^a-zA-Zäüö0123456789ß ]", ""), records.get(1).getRecord().get("languageFlag"), stopwordRemover);			
+					ra = createJCasAndRunDKProPipeline(jcas, records.getRecord().get("refAnswer").replaceAll("[^a-zA-Zäüö0123456789ß ]", ""), records.getRecord().get("languageFlag"), stopwordRemover);			
 					preprocessingInfoReferenceAnswer = getPreprocessedTokens(ra);
 
 					wordsInRefAnswer = preprocessingInfoReferenceAnswer.get("words"); 
 					posInRefAnswer	= preprocessingInfoReferenceAnswer.get("pos");
 					lemmasInRefAnswer = preprocessingInfoReferenceAnswer.get("lemmas");
 					stemsInRefAnswer = preprocessingInfoReferenceAnswer.get("stems");	
-				}
-				oldQuestion = question;
-				//enrich each record with the new representations of question and reference answers					
-				r.setTokenWordsQuestion(wordsInQuestion);
-				r.setTokenPosQuestion(posInQuestion);
-				r.setTokenLemmasQuestion(lemmasInQuestion);
-				r.setTokenStemsQuestion(stemsInQuestion);
+				
+					
+					oldQuestion = question;
+					//enrich each record with the new representations of question and reference answers					
+					records.setTokenWordsQuestion(wordsInQuestion);
+					records.setTokenPosQuestion(posInQuestion);
+					records.setTokenLemmasQuestion(lemmasInQuestion);
+					records.setTokenStemsQuestion(stemsInQuestion);
 
-				r.setTokenWordsReferenceAnswer(wordsInRefAnswer);
-				r.setTokenPosReferenceAnswer(posInRefAnswer);
-				r.setTokenLemmasReferenceAnswer(lemmasInRefAnswer);
-				r.setTokenStemsReferenceAnswer(stemsInRefAnswer);
+					records.setTokenWordsReferenceAnswer(wordsInRefAnswer);
+					records.setTokenPosReferenceAnswer(posInRefAnswer);
+					records.setTokenLemmasReferenceAnswer(lemmasInRefAnswer);
+					records.setTokenStemsReferenceAnswer(stemsInRefAnswer);
+					
+					
+					
+				
 
 				jcas.reset();
 				//enrich each record with the new representations of the student answer, with and without stopword removal
-				JCas aOrig = createJCasAndRunDKProPipeline(jcas, r.getRecord().get("answer"), records.get(1).getRecord().get("languageFlag"), null);				
+				JCas aOrig = createJCasAndRunDKProPipeline(jcas, records.getRecord().get("answer"), records.getRecord().get("languageFlag"), null);				
 				HashMap<String, ArrayList<String>> preprocessingInfoAnswerOrig = getPreprocessedTokens(aOrig);			
 
-				r.setTokenWordsAnswerOrig(preprocessingInfoAnswerOrig.get("words")); //The highlighted answer in the end shall contain case information
+				records.setTokenWordsAnswerOrig(preprocessingInfoAnswerOrig.get("words")); //The highlighted answer in the end shall contain case information
 
 				jcas.reset();
 				//lowercased version of the student answer
-				JCas aOrigLowercased = createJCasAndRunDKProPipeline(jcas, r.getRecord().get("answer"), records.get(1).getRecord().get("languageFlag"), null);				
+				JCas aOrigLowercased = createJCasAndRunDKProPipeline(jcas, records.getRecord().get("answer"), records.getRecord().get("languageFlag"), null);				
 				HashMap<String, ArrayList<String>> preprocessingInfoAnswerOrigLowercased = getPreprocessedTokens(aOrigLowercased);			
 
-				r.setTokenPosAnswerOrig(preprocessingInfoAnswerOrigLowercased.get("pos"));
-				r.setTokenLemmasAnswerOrig(preprocessingInfoAnswerOrigLowercased.get("lemmas"));
-				r.setTokenStemsAnswerOrig(preprocessingInfoAnswerOrigLowercased.get("stems"));
+				records.setTokenPosAnswerOrig(preprocessingInfoAnswerOrigLowercased.get("pos"));
+				records.setTokenLemmasAnswerOrig(preprocessingInfoAnswerOrigLowercased.get("lemmas"));
+				records.setTokenStemsAnswerOrig(preprocessingInfoAnswerOrigLowercased.get("stems"));
 
 				jcas.reset();
 				//now with stopword removal, lowercased
-				JCas a = createJCasAndRunDKProPipeline(jcas, r.getRecord().get("answer"), records.get(1).getRecord().get("languageFlag"), stopwordRemover);			
+				JCas a = createJCasAndRunDKProPipeline(jcas, records.getRecord().get("answer"), records.getRecord().get("languageFlag"), stopwordRemover);			
 				HashMap<String, ArrayList<String>> preprocessingInfoAnswer = getPreprocessedTokens(a);
 
-				r.setTokenWordsAnswer(preprocessingInfoAnswer.get("words"));
-				r.setTokenPosAnswer(preprocessingInfoAnswer.get("pos"));
-				r.setTokenLemmasAnswer(preprocessingInfoAnswer.get("lemmas"));
-				r.setTokenStemsAnswer(preprocessingInfoAnswer.get("stems"));
+				records.setTokenWordsAnswer(preprocessingInfoAnswer.get("words"));
+				records.setTokenPosAnswer(preprocessingInfoAnswer.get("pos"));
+				records.setTokenLemmasAnswer(preprocessingInfoAnswer.get("lemmas"));
+				records.setTokenStemsAnswer(preprocessingInfoAnswer.get("stems"));
 			
 				temp.delete();
 			}
-		} catch (UIMAException e) {
+}catch (UIMAException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -213,7 +219,7 @@ public class Preprocessor {
 	 * @param records
 	 * @author Verena Meyer
 	 */
-	private void buildStopwordList(ArrayList<String> wordsInQuestion, ArrayList<Record> records, File temp) {
+	private void buildStopwordList(ArrayList<String> wordsInQuestion, Record records, File temp) {
 
 		try {
 			FileWriter writer = new FileWriter(temp, true);

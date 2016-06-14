@@ -13,10 +13,14 @@ public class PostedRecord {
 
 	private HashMap<String, String> postedRecordString = new HashMap<String, String>();
 	private HashMap<String, Integer> postedRecordInt = new HashMap<String, Integer>();
+	private HashMap<String, Double> postedRecordDouble = new HashMap<String, Double>();
+//	private HashMap<String, String[]> postedRecordArray = new HashMap<String, String[]>();
 
 	public PostedRecord(){
 		
 	}
+
+	
 
 	@Override
 	public String toString() {
@@ -26,6 +30,7 @@ public class PostedRecord {
 				+ ", refAnswer=" + postedRecordString.get("refAnswer") 
 				+ ", answer=" + postedRecordString.get("answer")
 				+ ", languageFlag=" + postedRecordString.get("languageFlag")
+				+ ", threshold=" + postedRecordDouble.get("threshold")
 				+ ", max=" + postedRecordInt.get("max") 
 				+ ", min=" + postedRecordInt.get("min") 
 				+ ", sec=" + postedRecordInt.get("sec")
@@ -48,4 +53,10 @@ public class PostedRecord {
 	public void setPostedRecordInt(HashMap<String, Integer> postedRecordInt) {
 		this.postedRecordInt = postedRecordInt;
 	}
-}
+	public HashMap<String, Double> getPostedRecordDouble() {
+		return postedRecordDouble;
+	}
+
+	public void setPostedRecordDouble(HashMap<String, Double> postedRecordDouble) {
+		this.postedRecordDouble = postedRecordDouble;
+	}

@@ -19,7 +19,11 @@ public class SimilarityCalculator {
 	//INFO: If you want to raise or lower the bar for similar answers just alter the score of 0.29 (higher number: get fewer similar answers, 
 	// lower number: get more similar answers)
 	//e.g. 1.0 -> you only get answers which are absolutely identical, 0.0 -> all answers are similar to each other.
-	private static final double THRESHOLD = 0.34;
+	private double threshold = 0.34;
+	
+	public void setThreshold(double threshold) {
+		this.threshold = threshold;
+	}
 	
 	public ArrayList<Record> calculateSimilarity(ArrayList<Record> records){
 
@@ -55,7 +59,7 @@ public class SimilarityCalculator {
 					/*store the similar
 					&& is more restrictive than || if you want to use all results if either lemmasScoreInter1 or lemmasScoreInter2 change back to || 
 					(depends on algorithm to calculate similarity) */
-					if(lemmasScoreInter1 >= THRESHOLD && lemmasScoreInter2 >= THRESHOLD){						
+					if(lemmasScoreInter1 >= threshold && lemmasScoreInter2 >= threshold){						
 						records.get(counter_out).setScoreInter(lemmasScoreInter1);
 						similarAnswers_out.add(records.get(counter_in).getExchId());
 						

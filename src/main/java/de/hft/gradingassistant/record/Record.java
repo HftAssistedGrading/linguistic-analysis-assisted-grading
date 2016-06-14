@@ -11,9 +11,10 @@ import java.util.HashMap;
 public class Record implements Comparable<Record>{
 
 	private HashMap<String, String> record = new HashMap<String, String>();
+	//private HashMap<String, String[]> referenceAnswer = new HashMap<String, String[]>();
 	private double max = 0.0;
 	private int exchId = 0;
-	
+	private double threshold = 0.0;
 	private int min = 0;
 	private int sec = 0;
 	private int numAttempts = 0;
@@ -53,14 +54,18 @@ public class Record implements Comparable<Record>{
 	//fill a record
     public Record(PostedRecord r) {
 		record.putAll(r.getPostedRecordString());
+		//referenceAnswer.putAll(r.getPostedRecordArray());
+		
+		//referenceAnswer.put("refAnswer", referenceAnswer.get("refAnswer"));
 
 		record.put("question", record.get("question").replaceAll("\\n","").replaceAll("\\r","").toLowerCase());	//delete all newline and return characters		record.put("refAnswer", postedRecord.getReferenceanswer0().replaceAll("\\n","").replaceAll("\\r","").toLowerCase());	
 		record.put("answer", record.get("answer").replaceAll("\\n","").replaceAll("\\r","").toLowerCase()); //TODO: ist das die Antwort die gegeben wurde?	
 		record.put("question", record.get("question").replaceAll("\\n","").replaceAll("\\r",""));	//delete all newline and return characters
-		record.put("refAnswer", record.get("refAnswer").replaceAll("\\n","").replaceAll("\\r",""));	
+		record.put("refAnswer", record.get("refAnswer"));//.replaceAll("\\n","").replaceAll("\\r",""));	
 		record.put("answer", record.get("answer").replaceAll("\\n","").replaceAll("\\r",""));		
 		record.put("pointsString", "1");
 		
+		this.threshold = r.getPostedRecordDouble().get("threshold");
 		if(r.getPostedRecordInt().get("max") > 0){
 		    this.max = r.getPostedRecordInt().get("max");	
 		}  
@@ -68,6 +73,7 @@ public class Record implements Comparable<Record>{
 		this.min = r.getPostedRecordInt().get("min");
 	}
 
+	
 	public int compareTo(Record argument) {    
         if(Double.isNaN(this.score)){
         	this.score = 0;
@@ -85,6 +91,15 @@ public class Record implements Comparable<Record>{
 	}	
 
 	//Getters and Setters
+	
+	public double getThreshold() {
+		return threshold;
+	}
+
+	public void setThreshold(double threshold) {
+		this.threshold = threshold;
+	}
+
     public double getMax() {
 		return max;
 	}

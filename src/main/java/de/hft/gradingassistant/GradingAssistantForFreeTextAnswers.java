@@ -70,6 +70,30 @@ public class GradingAssistantForFreeTextAnswers {
 		JsonArrayBuilder builder = Json.createArrayBuilder();
 		
 		String finJSON = "";
+		if(records.size()==1) {
+			
+			for(Record r : records){
+				for(int id : r.getSimilarAnswers()){
+					builder.add(id);
+				}
+				JsonArray array = builder.build();
+				
+				b.add(factory.createObjectBuilder()
+						.add("id", r.getExchId())
+						.add("answer", r.getRecord().get("answer"))
+						.add("score", r.getScore())
+						.add("sanity_check", array));
+			}
+				
+			JsonArray a = b.build();
+			finJSON = a.toString();
+			System.out.println("finJSON " + finJSON.toString());
+			
+			return finJSON;
+		}
+		
+	else {
+		
 		for(Record r : records){
 			for(int id : r.getSimilarAnswers()){
 				builder.add(id);
@@ -88,6 +112,7 @@ public class GradingAssistantForFreeTextAnswers {
 		System.out.println("finJSON " + finJSON.toString());
 		
 		return finJSON;
+	}
 	}
 
 	/**
@@ -129,12 +154,54 @@ public class GradingAssistantForFreeTextAnswers {
 
 		//the Preprocessor will tokenize, tag, stem, lemmatize and for some usages also lowercase the question, answer and all reference answers
 		//the new information on tags, lemmas etc will be added to the corresponding Record object
-		a.preprocessTextWithDKProPipeline(records);
+		//a.preprocessTextWithDKProPipeline(records);
+		String[] referenceAnswers = {};
+		referenceAnswers = records.get(0).getRecord().get("refAnswer").split("_NEXTANSWER_");
+		Record temp = new Record();
 		
-		//Calculate similarity between the student answers to give feedback in the frontend (if given points
-		//by a human grader are inconsistent for similar student answers)
+		if(records.size()==1) {
+		
+			for(Record r : records){
+				
+				
+				TextSimilarityMeasure measureText = null;		
+				//min num of chars is 4
+				measureText = new GreedyStringTiling(4);
+				double lemmasScore = 0.0;
+				double maxLemmasScore = 0.0;
+				temp = r;
+				
+				
+				
+				for(String refAns : referenceAnswers) {
+
+				try {
+					r.getRecord().put("refAnswer", refAns);
+					a.preprocessTextWithDKProPipeline(r);
+					lemmasScore = measureText.getSimilarity(r.getTokenLemmasReferenceAnswer(), r.getTokenLemmasAnswer());	
+					if(lemmasScore > maxLemmasScore) {
+						maxLemmasScore = lemmasScore;
+					}
+				} catch (SimilarityException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+				//store the similarity score using stems in the Record object field score
+				r.getRecord().put("refAnswer", temp.getRecord().get("refAnswer"));
+				r.setScore(maxLemmasScore);
+			}
+		}
+		else {
+		
+	/*	for( Record rec : records) {
+			a.preprocessTextWithDKProPipeline(rec);
+		}		
 		SimilarityCalculator c = new SimilarityCalculator();
-		c.calculateSimilarity(records);
+		c.setThreshold(records.get(0).getThreshold());
+		c.calculateSimilarity(records); */
+		
+		Record t = new Record();
 		
 		//for each record, measure the similarity of the student answer and the reference answer (=referenceanswer)
 		for(Record r : records){
@@ -142,17 +209,37 @@ public class GradingAssistantForFreeTextAnswers {
 			//min num of chars is 4
 			measureText = new GreedyStringTiling(4);
 			double lemmasScore = 0.0;
+			double maxLemmasScore = 0.0;
+			
+			t = r;
+			
+			for(String refAns : referenceAnswers) {
 
 			try {
-				lemmasScore = measureText.getSimilarity(r.getTokenLemmasReferenceAnswer(), r.getTokenLemmasAnswer());				 							
+			    r.getRecord().put("refAnswer", refAns);
+			    a.preprocessTextWithDKProPipeline(r);
+			    lemmasScore = measureText.getSimilarity(r.getTokenLemmasReferenceAnswer(), r.getTokenLemmasAnswer());				 							
+				if(lemmasScore > maxLemmasScore) {
+					maxLemmasScore = lemmasScore;
+				}	
 			} catch (SimilarityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
 
+			r.getRecord().put("refAnswer", t.getRecord().get("refAnswer"));
 			//store the similarity score using stems in the Record object field score
-			r.setScore(lemmasScore);
-		}		
+			r.setScore(maxLemmasScore);
+		}
+		
+		//Calculate similarity between the student answers to give feedback in the frontend (if given points
+		//by a human grader are inconsistent for similar student answers)
+		SimilarityCalculator c = new SimilarityCalculator();
+		c.setThreshold(records.get(0).getThreshold());
+		c.calculateSimilarity(records);
+		}
+		
 	}
 
 	public ArrayList<Record> getRecords() {
